@@ -1,52 +1,41 @@
 import React, { useEffect, useState } from "react";
 import API from "../services/api";
-import { useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
+import Header from "../Components/Header";
+import Footer from "../Components/Footer";
 
 const ProductList = () => {
   const [products, setProducts] = useState([]);
-  const navigate = useNavigate();
-
-  // ?? Edit state
   const [editId, setEditId] = useState(null);
+  const [loading, setLoading] = useState(false);
   const [editForm, setEditForm] = useState({
     name: "",
     price: "",
     category: "",
+    image: null,
   });
 
-  // ?? Fetch products
+  const fetchProducts = async () => {
+    const res = await API.get("/products");
+    setProducts(res.data);
+  };
+
   useEffect(() => {
-    const fetchProducts = async () => {
-      const res = await API.get("/products");
-      setProducts(res.data);
-    };
     fetchProducts();
   }, []);
 
-  // ?? DELETE
   const handleDelete = async (id) => {
-    const confirmDelete = window.confirm("Are you sure?");
-    if (!confirmDelete) return;
+    if (!window.confirm("Delete this product?")) return;
 
-    try {
-      const token = localStorage.getItem("token");
+    const token = localStorage.getItem("token");
 
-      await API.delete(`/products/${id}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+    await API.delete(`/products/${id}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
 
-      setProducts(products.filter((p) => p._id !== id));
-      alert("Deleted Successfully");
-
-    } catch (error) {
-      console.log(error.response?.data);
-      alert("Delete Failed");
-    }
+    setProducts(products.filter((p) => p._id !== id));
   };
 
-  // ?? EDIT START
   const startEdit = (p) => {
     setEditId(p._id);
     setEditForm({
@@ -56,103 +45,161 @@ const ProductList = () => {
     });
   };
 
-  // ?? UPDATE
-  const handleUpdate = async (id) => {
-    try {
-      const token = localStorage.getItem("token");
+const handleUpdate = async (id) => {
+  try {
+    setLoading(true);
 
-      await API.put(`/products/${id}`, editForm, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+    const token = localStorage.getItem("token");
 
-      // UI update
-      setProducts(
-        products.map((p) =>
-          p._id === id ? { ...p, ...editForm } : p
-        )
-      );
+    // ? ? instant UI update (optimistic)
+    setProducts((prev) =>
+      prev.map((p) =>
+        p._id === id
+          ? {
+              ...p,
+              name: editForm.name,
+              price: editForm.price,
+              category: editForm.category,
+              // image turant change nahi karenge (cloudinary delay)
+            }
+          : p
+      )
+    );
 
-      setEditId(null);
-      alert("Updated Successfully");
+    const data = new FormData();
+    data.append("name", editForm.name);
+    data.append("price", editForm.price);
+    data.append("category", editForm.category);
 
-    } catch (error) {
-      console.log(error.response?.data);
-      alert("Update Failed");
+    if (editForm.image) {
+      data.append("image", editForm.image);
     }
-  };
+
+    await API.put(`/products/${id}`, data, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    // ? final correct data
+    await fetchProducts();
+
+    setEditId(null);
+
+    toast.success("Product Updated");
+
+  } catch (error) {
+    console.log(error.response?.data);
+    toast.error("Update Failed");
+
+    // ? agar fail hua to rollback
+    await fetchProducts();
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
-    <div style={{ padding: "20px" }}>
-      <h2>All Products</h2>
+    <>
+    
+    <Header />
 
-      {products.map((p) => (
-        <div
-          key={p._id}
-          style={{
-            border: "1px solid #ccc",
-            margin: "10px",
-            padding: "10px",
-            width: "250px",
-            borderRadius: "10px",
-          }}
-        >
-          {/* ?? CONDITIONAL EDIT UI */}
-          {editId === p._id ? (
-            <div>
-              <input
-                value={editForm.name}
-                onChange={(e) =>
-                  setEditForm({ ...editForm, name: e.target.value })
-                }
-                placeholder="Name"
-              />
+    <div className="min-h-screen bg-gray-100 p-6">
+      <h2 className="text-3xl font-bold mb-6 text-center">All Products</h2>
 
-              <input
-                value={editForm.price}
-                onChange={(e) =>
-                  setEditForm({ ...editForm, price: e.target.value })
-                }
-                placeholder="Price"
-              />
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {products.map((p) => (
+          <div key={p._id} className="bg-white p-4 rounded-xl shadow">
+            {editId === p._id ? (
+              <>
+                <input
+                  value={editForm.name}
+                  onChange={(e) =>
+                    setEditForm({ ...editForm, name: e.target.value })
+                  }
+                  className="border p-2 mb-2 w-full rounded"
+                />
 
-              <input
-                value={editForm.category}
-                onChange={(e) =>
-                  setEditForm({ ...editForm, category: e.target.value })
-                }
-                placeholder="Category"
-              />
+                <input
+                  value={editForm.price}
+                  onChange={(e) =>
+                    setEditForm({ ...editForm, price: e.target.value })
+                  }
+                  className="border p-2 mb-2 w-full rounded"
+                />
 
-              <div style={{ marginTop: "10px" }}>
-                <button onClick={() => handleUpdate(p._id)}>Save</button>
-                <button onClick={() => setEditId(null)}>Cancel</button>
-              </div>
-            </div>
-          ) : (
-            <>
-              <h3>{p.name}</h3>
-              <p>Price: {p.price}</p>
-              <p>Category: {p.category}</p>
+                <input
+                  value={editForm.category}
+                  onChange={(e) =>
+                    setEditForm({ ...editForm, category: e.target.value })
+                  }
+                  className="border p-2 mb-2 w-full rounded"
+                />
 
-              <img src={p.image} width="120" />
-
-              <div style={{ marginTop: "10px" }}>
-                <button onClick={() => startEdit(p)}>Edit</button>
+                <input
+                  type="file"
+                  onChange={(e) =>
+                    setEditForm({ ...editForm, image: e.target.files[0] })
+                  }
+                  className="mb-2"
+                />
 
                 <button
-                  onClick={() => handleDelete(p._id)}
-                  style={{ marginLeft: "10px", background: "red", color: "white" }}
+                  onClick={() => handleUpdate(p._id)}
+                  disabled={loading}
+                  className={`px-3 py-1 rounded text-white ${
+                    loading ? "bg-gray-400" : "bg-green-500"
+                  }`}
                 >
-                  Delete
+                  {loading && <p className="text-sm text-gray-500">Uploading image...</p>}
+                  Save
                 </button>
-              </div>
-            </>
-          )}
-        </div>
-      ))}
+
+                <button
+                  onClick={() => setEditId(null)}
+                  className="bg-gray-400 text-white px-3 py-1 m-2 rounded"
+                >
+                  Cancel
+                </button>
+              </>
+            ) : (
+              <>
+                <img
+                  src={p.image}
+                  alt=""
+                  className="w-full h-40 object-contain bg-gray-100 rounded mb-2"
+                />
+
+                <h3 className="text-xl font-semibold">{p.name}</h3>
+                <p className="text-gray-600">{p.price}</p>
+                <p className="text-sm text-gray-500">{p.category}</p>
+
+                <div className="mt-3 flex gap-2">
+                  <button
+                    onClick={() => startEdit(p)}
+                    className="bg-yellow-400 px-3 py-1 rounded"
+                  >
+                    Edit
+                  </button>
+
+                  <button
+                    onClick={() => handleDelete(p._id)}
+                    className="bg-red-500 text-white px-3 py-1 rounded"
+                  >
+                    Delete
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        ))}
+      </div>
     </div>
+
+    <Footer />
+    
+    
+    </>
   );
 };
 
