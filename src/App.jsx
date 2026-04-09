@@ -1,13 +1,13 @@
 import { Routes, Route } from "react-router-dom";
-import Login from "./Pages/Login";
-import Dashboard from "./Pages/Dashboard";
-import AddProduct from "./Pages/AddProduct";
-import ProductList from "./Pages/ProductList";
+import Login from "./pages/Login";
+import Dashboard from "./pages/Dashboard";
+import AddProduct from "./pages/AddProduct";
+import ProductList from "./pages/ProductList";
 import { Toaster } from "react-hot-toast";
-import Home from "./Pages/Home"
-import Signup from "./Pages/SignUp";
-import Contact from "./Pages/Contact";
-import About from "./Pages/About";
+import Home from "./pages/Home"
+import Signup from "./pages/SignUp";
+import Contact from "./pages/Contact";
+import About from "./pages/About";
 
 function App() {
   return (
