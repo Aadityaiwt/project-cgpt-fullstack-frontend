@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import API from "../services/api";
 import toast from "react-hot-toast";
-import Header from "../Components/Header";
-import Footer from "../Components/Footer";
+import Header from "../components/Header";
+import Footer from "../components/Footer";
 
 const ProductList = () => {
   const [products, setProducts] = useState([]);
