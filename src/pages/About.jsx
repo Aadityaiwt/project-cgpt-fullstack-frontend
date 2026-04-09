@@ -27,7 +27,7 @@ const About = () => {
           {/* Left Section */}
           <div>
             <h2 className="text-xl font-semibold mb-3">
-              ?? Our Mission
+               Our Mission
             </h2>
             <p className="text-gray-600">
               Our mission is to deliver high-quality products with fast delivery
@@ -39,7 +39,7 @@ const About = () => {
           {/* Right Section */}
           <div>
             <h2 className="text-xl font-semibold mb-3">
-              ?? Our Vision
+               Our Vision
             </h2>
             <p className="text-gray-600">
               Our vision is to become a leading e-commerce platform by
@@ -52,14 +52,14 @@ const About = () => {
         {/* Features */}
         <div className="mt-10">
           <h2 className="text-xl font-semibold mb-4 text-center">
-            ? Why Choose Us
+             Why Choose Us
           </h2>
 
           <ul className="space-y-2 text-gray-600 text-center">
-            <li>?? High Quality Products</li>
-            <li>?? Secure Payments</li>
-            <li>?? Fast Delivery</li>
-            <li>?? 24/7 Customer Support</li>
+            <li> High Quality Products</li>
+            <li> Secure Payments</li>
+            <li> Fast Delivery</li>
+            <li> 24/7 Customer Support</li>
           </ul>
         </div>
 
